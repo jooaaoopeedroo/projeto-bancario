@@ -72,11 +72,114 @@ public class Controlador {
 
     public static void acessarConta() {
         Telas.cabecalhoLogin();
-
         String numeroConta = Telas.lerTexto("Número da conta");
-        String senha = Telas.lerTexto("Senha");
+        int tentativas = 0;
+        while (tentativas < 3) {
+            String senha = Telas.lerTexto("Senha: ");
+            Cliente cliente = new Cliente();
+            String status = central.login(numeroConta, senha, cliente);
 
-        // Login completo será implementado na Aula 06, com a CentralBancaria.
-        Telas.mensagem("Login recebido para a conta " + numeroConta + " (em breve).", false);
+            switch (status) {
+                case "OK":
+                    menuConta(cliente);
+                case "CONTA_INEXISTENTE":
+                    Telas.mensagem("Conta inexistente. Verifique o número e tente novamente.", true);
+                    return;
+                case "BLOQUEADA":
+                    Telas.mensagem("Conta bloqueada devido a múltiplas tentativas de login falhadas.", true);
+                    return;
+                case "SENHA_INCORRETA":
+                    tentativas++;
+                    if (tentativas < 3) {
+                        Telas.mensagem("Senha incorreta. Tentativa " + tentativas + " de 3.", false);
+                    }
+                    break;
+                default:
+                    Telas.mensagem("Erro de comunicação. Tente novamente mais tarde.", true);
+                    return;
+            }
+
+        }
+
     }
+
+    public static void menuConta(Cliente cliente) {
+        int opcao;
+        do {
+            Telas.menuConta(cliente.getNome(), cliente.getSaldo());
+            opcao = Telas.lerOpcao();
+
+            switch (opcao) {
+                case 1:
+                    // Iremos implementar o depósito
+                    Telas.mensagem("Iremos implementar o depósito", false);
+                    break;
+                case 2:
+                    // Iremos implementar o saque
+                    Telas.mensagem("Iremos implementar o saque", false);
+                    break;
+                case 3:
+                    // Iremos implementar transferência
+                    Telas.mensagem("Iremos implementar transferência", false);
+                    break;
+                case 4:
+                    // Iremos implementar o extrato
+                    Telas.mensagem("Iremos implementar o extrato", false);
+                    break;
+                case 5:
+                    Telas.mensagem("Até logo, " + cliente.getNome() + "!", false);
+                    break;
+                default:
+                    Telas.mensagem("Opção inválida.", true);
+            }
+
+        } while (opcao != 5);
+    }
+
+    // Operações
+
+    private static void depositar(Cliente cliente) {
+        Telas.limparTela();
+        double valor = Telas.lerValor("Valor a ser depositado: R$");
+
+        if (valor <= 0) {
+            Telas.mensagem("Valor inválido!", true);
+            return;
+        }
+
+        boolean ok = central.depositar(cliente, valor);
+        if (ok) {
+            Telas.mensagem(
+                    String.format("Depósito de R$ %.2f realizado com sucesso!", valor),
+                    false);
+        } else {
+            Telas.mensagem("Erro ao realizar o depósito!", true);
+        }
+    }
+
+    private static void sacar(Cliente cliente) {
+        Telas.limparTela();
+        double valor = Telas.lerValor("Valor que deseja sacar: R$");
+
+        if (valor <= 0) {
+            Telas.mensagem("Valor inválido!", true);
+            return;
+        }
+        if (valor > cliente.getSaldo()) {
+            Telas.mensagem("Saldo insuficiente!", true);
+            return;
+        }
+
+        boolean ok = central.sacar(cliente, valor);
+        if (ok) {
+            Telas.mensagem(
+                    String.format("Saque de R$ %.2f realizado com sucesso!\nSaldo atual: R$ %.2f",
+                            valor,
+                            cliente.getSaldo()),
+                    false);
+        } else {
+            Telas.mensagem("Erro ao realizar o saque!", true);
+        }
+    }
+
 }
