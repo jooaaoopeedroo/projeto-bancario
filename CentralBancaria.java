@@ -25,8 +25,7 @@ import java.util.regex.Pattern;
  */
 public class CentralBancaria {
 
-    private static final String BASE_URL =
-            "https://mockapi.jbmiranda.vps-kinghost.net/senai-banco-digital";
+    private static final String BASE_URL = "https://mockapi.jbmiranda.vps-kinghost.net/senai-banco-digital";
 
     private final HttpClient http = HttpClient.newHttpClient();
 
@@ -116,16 +115,20 @@ public class CentralBancaria {
      */
     private String extrairBody(String recordJson) {
         int label = recordJson.indexOf("\"body\":");
-        if (label == -1) return null;
+        if (label == -1)
+            return null;
         int inicio = recordJson.indexOf("{", label + 7);
-        if (inicio == -1) return null;
+        if (inicio == -1)
+            return null;
         int profundidade = 0;
         for (int i = inicio; i < recordJson.length(); i++) {
             char c = recordJson.charAt(i);
-            if (c == '{') profundidade++;
+            if (c == '{')
+                profundidade++;
             else if (c == '}') {
                 profundidade--;
-                if (profundidade == 0) return recordJson.substring(inicio, i + 1);
+                if (profundidade == 0)
+                    return recordJson.substring(inicio, i + 1);
             }
         }
         return null;
@@ -138,29 +141,37 @@ public class CentralBancaria {
     private List<String[]> parseTransacoes(String bodyJson) {
         List<String[]> lista = new ArrayList<>();
         int idx = bodyJson.indexOf("\"transacoes\"");
-        if (idx == -1) return lista;
+        if (idx == -1)
+            return lista;
         int arrInicio = bodyJson.indexOf("[", idx);
-        if (arrInicio == -1) return lista;
+        if (arrInicio == -1)
+            return lista;
         int pos = arrInicio + 1;
         while (pos < bodyJson.length()) {
             int objInicio = bodyJson.indexOf("{", pos);
-            if (objInicio == -1) break;
+            if (objInicio == -1)
+                break;
             int profundidade = 0;
             int objFim = -1;
             for (int i = objInicio; i < bodyJson.length(); i++) {
                 char c = bodyJson.charAt(i);
-                if (c == '{') profundidade++;
+                if (c == '{')
+                    profundidade++;
                 else if (c == '}') {
                     profundidade--;
-                    if (profundidade == 0) { objFim = i; break; }
+                    if (profundidade == 0) {
+                        objFim = i;
+                        break;
+                    }
                 }
             }
-            if (objFim == -1) break;
+            if (objFim == -1)
+                break;
             String obj = bodyJson.substring(objInicio, objFim + 1);
-            String tipo  = parseStr(obj, "tipo");
+            String tipo = parseStr(obj, "tipo");
             String valor = String.valueOf(parseDouble(obj, "valor"));
-            String data  = parseStr(obj, "data");
-            lista.add(new String[]{tipo, valor, data});
+            String data = parseStr(obj, "data");
+            lista.add(new String[] { tipo, valor, data });
             pos = objFim + 1;
         }
         return lista;
@@ -168,20 +179,22 @@ public class CentralBancaria {
 
     private Registro parseRegistro(String recordJson) {
         String id = parseStr(recordJson, "id");
-        if (id == null) return null;
+        if (id == null)
+            return null;
         String body = extrairBody(recordJson);
-        if (body == null) return null;
+        if (body == null)
+            return null;
         Registro r = new Registro();
-        r.id              = id;
-        r.nome            = parseStr(body, "nome");
-        r.cpf             = parseStr(body, "cpf");
-        r.dataNascimento  = parseStr(body, "dataNascimento");
-        r.numeroConta     = parseStr(body, "numeroConta");
-        r.senha           = parseStr(body, "senha");
-        r.saldo           = parseDouble(body, "saldo");
-        r.bloqueada       = parseBool(body, "bloqueada");
+        r.id = id;
+        r.nome = parseStr(body, "nome");
+        r.cpf = parseStr(body, "cpf");
+        r.dataNascimento = parseStr(body, "dataNascimento");
+        r.numeroConta = parseStr(body, "numeroConta");
+        r.senha = parseStr(body, "senha");
+        r.saldo = parseDouble(body, "saldo");
+        r.bloqueada = parseBool(body, "bloqueada");
         r.tentativasFalhas = parseInt(body, "tentativasFalhas");
-        r.transacoes      = parseTransacoes(body);
+        r.transacoes = parseTransacoes(body);
         return r;
     }
 
@@ -191,24 +204,32 @@ public class CentralBancaria {
     private List<Registro> parseTodos(String json) {
         List<Registro> lista = new ArrayList<>();
         int arrInicio = json.indexOf("[");
-        if (arrInicio == -1) return lista;
+        if (arrInicio == -1)
+            return lista;
         int pos = arrInicio + 1;
         while (pos < json.length()) {
             int objInicio = json.indexOf("{", pos);
-            if (objInicio == -1) break;
+            if (objInicio == -1)
+                break;
             int profundidade = 0;
             int objFim = -1;
             for (int i = objInicio; i < json.length(); i++) {
                 char c = json.charAt(i);
-                if (c == '{') profundidade++;
+                if (c == '{')
+                    profundidade++;
                 else if (c == '}') {
                     profundidade--;
-                    if (profundidade == 0) { objFim = i; break; }
+                    if (profundidade == 0) {
+                        objFim = i;
+                        break;
+                    }
                 }
             }
-            if (objFim == -1) break;
+            if (objFim == -1)
+                break;
             Registro r = parseRegistro(json.substring(objInicio, objFim + 1));
-            if (r != null) lista.add(r);
+            if (r != null)
+                lista.add(r);
             pos = objFim + 1;
         }
         return lista;
@@ -219,7 +240,8 @@ public class CentralBancaria {
     // =========================================================
 
     private String escapar(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
@@ -242,7 +264,8 @@ public class CentralBancaria {
             sb.append("\"valor\":").append(t[1]).append(",");
             sb.append("\"data\":\"").append(escapar(t[2])).append("\"");
             sb.append("}");
-            if (i < r.transacoes.size() - 1) sb.append(",");
+            if (i < r.transacoes.size() - 1)
+                sb.append(",");
         }
         sb.append("]}");
         return sb.toString();
@@ -258,14 +281,16 @@ public class CentralBancaria {
 
     private Registro buscarPorConta(String numeroConta) throws Exception {
         for (Registro r : buscarTodos()) {
-            if (numeroConta.equals(r.numeroConta)) return r;
+            if (numeroConta.equals(r.numeroConta))
+                return r;
         }
         return null;
     }
 
     private Registro buscarPorCpf(String cpf) throws Exception {
         for (Registro r : buscarTodos()) {
-            if (cpf.equals(r.cpf)) return r;
+            if (cpf.equals(r.cpf))
+                return r;
         }
         return null;
     }
@@ -279,8 +304,10 @@ public class CentralBancaria {
         for (Registro r : buscarTodos()) {
             try {
                 int n = Integer.parseInt(r.numeroConta);
-                if (n >= 1000 && n % 10 == 0 && n > max) max = n;
-            } catch (NumberFormatException ignorado) { }
+                if (n >= 1000 && n % 10 == 0 && n > max)
+                    max = n;
+            } catch (NumberFormatException ignorado) {
+            }
         }
         return String.valueOf(max + 10);
     }
@@ -302,20 +329,22 @@ public class CentralBancaria {
      */
     public String cadastrar(String nome, String cpf, String dataNascimento) {
         try {
-            if (buscarPorCpf(cpf) != null) return "ERRO:CPF_JA_CADASTRADO";
+            if (buscarPorCpf(cpf) != null)
+                return "ERRO:CPF_JA_CADASTRADO";
 
             Registro r = new Registro();
-            r.nome           = nome;
-            r.cpf            = cpf;
+            r.nome = nome;
+            r.cpf = cpf;
             r.dataNascimento = dataNascimento;
-            r.numeroConta    = proximaNumeroConta();
-            r.senha          = "";
-            r.saldo          = 0.0;
-            r.bloqueada      = false;
+            r.numeroConta = proximaNumeroConta();
+            r.senha = "";
+            r.saldo = 0.0;
+            r.bloqueada = false;
             r.tentativasFalhas = 0;
 
             String resposta = httpPost(buildBody(r));
-            if (parseStr(resposta, "id") == null) return "ERRO:FALHA_NO_SERVIDOR";
+            if (parseStr(resposta, "id") == null)
+                return "ERRO:FALHA_NO_SERVIDOR";
             return r.numeroConta;
         } catch (Exception e) {
             return "ERRO:" + e.getMessage();
@@ -331,7 +360,8 @@ public class CentralBancaria {
     public boolean cadastrarSenha(String numeroConta, String senha) {
         try {
             Registro r = buscarPorConta(numeroConta);
-            if (r == null) return false;
+            if (r == null)
+                return false;
             r.senha = senha;
             httpPut(r.id, buildBody(r));
             return true;
@@ -344,24 +374,27 @@ public class CentralBancaria {
      * Realiza o login do cliente.
      *
      * Possíveis retornos:
-     *   "OK"               → login bem-sucedido; cliente é populado com nome,
-     *                        numeroConta e saldo.
-     *   "CONTA_INEXISTENTE"→ número de conta não encontrado.
-     *   "BLOQUEADA"        → conta bloqueada por tentativas excessivas.
-     *   "SENHA_INCORRETA"  → senha errada; após 3 erros a conta é bloqueada.
-     *   "ERRO:..."         → falha de comunicação.
+     * "OK" → login bem-sucedido; cliente é populado com nome,
+     * numeroConta e saldo.
+     * "CONTA_INEXISTENTE"→ número de conta não encontrado.
+     * "BLOQUEADA" → conta bloqueada por tentativas excessivas.
+     * "SENHA_INCORRETA" → senha errada; após 3 erros a conta é bloqueada.
+     * "ERRO:..." → falha de comunicação.
      *
      * @param cliente objeto a ser populado em caso de sucesso.
      */
     public String login(String numeroConta, String senha, Cliente cliente) {
         try {
             Registro r = buscarPorConta(numeroConta);
-            if (r == null) return "CONTA_INEXISTENTE";
-            if (r.bloqueada) return "BLOQUEADA";
+            if (r == null)
+                return "CONTA_INEXISTENTE";
+            if (r.bloqueada)
+                return "BLOQUEADA";
 
             if (!senha.equals(r.senha)) {
                 r.tentativasFalhas++;
-                if (r.tentativasFalhas >= 3) r.bloqueada = true;
+                if (r.tentativasFalhas >= 3)
+                    r.bloqueada = true;
                 httpPut(r.id, buildBody(r));
                 return "SENHA_INCORRETA";
             }
@@ -373,7 +406,8 @@ public class CentralBancaria {
             cliente.setNome(r.nome);
             cliente.setNumeroConta(r.numeroConta);
             cliente.setSaldo(r.saldo);
-            if (r.bloqueada) cliente.setBloqueada(true);
+            if (r.bloqueada)
+                cliente.setBloqueada(true);
             return "OK";
         } catch (Exception e) {
             return "ERRO:" + e.getMessage();
@@ -388,11 +422,13 @@ public class CentralBancaria {
      */
     public boolean depositar(Cliente cliente, double valor) {
         try {
-            if (valor <= 0) return false;
+            if (valor <= 0)
+                return false;
             Registro r = buscarPorConta(cliente.getNumeroConta());
-            if (r == null) return false;
+            if (r == null)
+                return false;
             r.saldo += valor;
-            r.transacoes.add(new String[]{"DEPOSITO", String.valueOf(valor), dataAtual()});
+            r.transacoes.add(new String[] { "DEPOSITO", String.valueOf(valor), dataAtual() });
             httpPut(r.id, buildBody(r));
             cliente.setSaldo(r.saldo);
             return true;
@@ -410,11 +446,13 @@ public class CentralBancaria {
      */
     public boolean sacar(Cliente cliente, double valor) {
         try {
-            if (valor <= 0) return false;
+            if (valor <= 0)
+                return false;
             Registro r = buscarPorConta(cliente.getNumeroConta());
-            if (r == null || r.saldo < valor) return false;
+            if (r == null || r.saldo < valor)
+                return false;
             r.saldo -= valor;
-            r.transacoes.add(new String[]{"SAQUE", String.valueOf(valor), dataAtual()});
+            r.transacoes.add(new String[] { "SAQUE", String.valueOf(valor), dataAtual() });
             httpPut(r.id, buildBody(r));
             cliente.setSaldo(r.saldo);
             return true;
@@ -433,20 +471,23 @@ public class CentralBancaria {
      */
     public boolean transferir(Cliente cliente, String contaDestino, double valor) {
         try {
-            if (valor <= 0) return false;
+            if (valor <= 0)
+                return false;
             Registro origem = buscarPorConta(cliente.getNumeroConta());
-            if (origem == null || origem.saldo < valor) return false;
+            if (origem == null || origem.saldo < valor)
+                return false;
             Registro destino = buscarPorConta(contaDestino);
-            if (destino == null) return false;
+            if (destino == null)
+                return false;
 
             origem.saldo -= valor;
-            origem.transacoes.add(new String[]{"TRANSFERENCIA_ENVIADA",
-                    String.valueOf(valor), dataAtual()});
+            origem.transacoes.add(new String[] { "TRANSFERENCIA_ENVIADA",
+                    String.valueOf(valor), dataAtual() });
             httpPut(origem.id, buildBody(origem));
 
             destino.saldo += valor;
-            destino.transacoes.add(new String[]{"TRANSFERENCIA_RECEBIDA",
-                    String.valueOf(valor), dataAtual()});
+            destino.transacoes.add(new String[] { "TRANSFERENCIA_RECEBIDA",
+                    String.valueOf(valor), dataAtual() });
             httpPut(destino.id, buildBody(destino));
 
             cliente.setSaldo(origem.saldo);
@@ -480,5 +521,18 @@ public class CentralBancaria {
             extrato.add("Erro ao carregar extrato: " + e.getMessage());
         }
         return extrato;
+    }
+
+    public boolean atualizarSaldo(Cliente cliente) {
+        try {
+            Registro r = buscarPorConta(cliente.getNumeroConta());
+            if (r == null)
+                return false;
+
+            cliente.setSaldo(r.saldo);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
